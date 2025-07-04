@@ -31,32 +31,6 @@ if (!isAuthenticated) {
     }
   });
 } else {
-  mainContent.style.display = "block";
-  loadSignals();
-}
-
-refreshBtn.onclick = loadSignals;
-setInterval(loadSignals, 10000); // auto-refresh every 10 sec
-
-function loadSignals() {
-  fetch("https://live.olympsignalapi.in/api/latest-signals")
-    .then(res => res.json())
-    .then(data => {
-      signalCards.innerHTML = "";
-      data.forEach(sig => {
-        const div = document.createElement("div");
-        div.className = "signal-card";
-        div.innerHTML = `
-          <h3>${sig.pair}</h3>
-          <p><strong>Action:</strong> <span class="${sig.action === 'BUY' ? 'action-buy' : 'action-sell'}">${sig.action}</span></p>
-          <p><strong>Entry:</strong> ${sig.entry}</p>
-          <p><strong>Exit:</strong> ${sig.exit}</p>
-          <p><strong>Strength:</strong> ${sig.strength}</p>
-          <p><a href="${sig.chart_url}" target="_blank">🔍 View Chart</a></p>
-        `;
-        signalCards.appendChild(div);
-      });
-      if (data.length > 0) sound.play();
-    })
-    .catch(() => console.error("Failed to fetch signals."));
+  pwdScreen.style.display = "none";
+  showIntro(); // <- this shows intro and then loads main content
 }
