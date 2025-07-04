@@ -38,7 +38,7 @@ if (!isAuthenticated) {
 refreshBtn.onclick = loadSignals;
 
 function loadSignals() {
-  fetch("https://your-live-engine-url.com/api/latest-signals")  // Replace with real endpoint
+  fetch("https://live.olympsignalapi.in/api/latest-signals")
     .then(res => res.json())
     .then(data => {
       signalTable.innerHTML = "";
