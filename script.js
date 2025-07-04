@@ -5,7 +5,6 @@ const mainContent = document.getElementById("mainContent");
 const pwdInput = document.getElementById("pwdInput");
 const signalCards = document.getElementById("signalCards");
 const refreshBtn = document.getElementById("refreshBtn");
-const sound = document.getElementById("notificationSound");
 
 function showIntro() {
   introPopup.style.display = "block";
@@ -22,7 +21,6 @@ function authenticateAndStart() {
   showIntro();
 }
 
-// Check if already authenticated
 if (localStorage.getItem("authenticated") === "true") {
   authenticateAndStart();
 } else {
@@ -40,13 +38,18 @@ if (localStorage.getItem("authenticated") === "true") {
 }
 
 refreshBtn.onclick = loadSignals;
-setInterval(loadSignals, 10000); // auto-refresh every 10s
+setInterval(loadSignals, 10000);
 
 function loadSignals() {
+  const rsiFilter = document.getElementById("rsiFilter").checked;
+  const volumeFilter = document.getElementById("volumeFilter").checked;
+  const breakoutFilter = document.getElementById("breakoutFilter").checked;
+
   fetch("https://live.olympsignalapi.in/api/latest-signals")
     .then(res => res.json())
     .then(data => {
       signalCards.innerHTML = "";
+      // You can add filtering based on rsiFilter, volumeFilter, breakoutFilter here if needed
       data.forEach(sig => {
         const div = document.createElement("div");
         div.className = "signal-card";
@@ -60,7 +63,6 @@ function loadSignals() {
         `;
         signalCards.appendChild(div);
       });
-      if (data.length > 0) sound.play();
     })
     .catch(() => console.error("Signal fetch failed."));
 }
