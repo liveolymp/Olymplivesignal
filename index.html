@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Olymp Signal by Shubham</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: #111827;
+      color: white;
+      font-family: Arial, sans-serif;
+    }
+    header {
+      background: #1f2937;
+      padding: 1rem;
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+    #signal-container {
+      padding: 1rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+    .card {
+      background: #1e40af;
+      padding: 1rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    }
+    .card strong {
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+    #refresh {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      background: #10b981;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <header>Olymp Signal by Shubham</header>
+  <button id="refresh">Refresh</button>
+  <div id="signal-container">Loading signals...</div>
+
+  <script>
+    const API_URL = "https://olymp-signal.onrender.com/api/latest-signals"; // Replace with your real backend URL
+
+    async function loadSignals() {
+      const container = document.getElementById("signal-container");
+      container.innerHTML = "Loading signals...";
+      try {
+        const res = await fetch(API_URL);
+        const data = await res.json();
+        if (!data.length) {
+          container.innerHTML = "No strong signals right now.";
+          return;
+        }
+        container.innerHTML = "";
+        data.forEach(signal => {
+          const div = document.createElement("div");
+          div.className = "card";
+          div.innerHTML = `
+            <strong>Pair:</strong> ${signal.pair}<br/>
+            <strong>Action:</strong> ${signal.action}<br/>
+            <strong>Strength:</strong> ${signal.strength}<br/>
+            <strong>Entry:</strong> ${signal.entry}<br/>
+            <strong>Exit:</strong> ${signal.exit}<br/>
+          `;
+          container.appendChild(div);
+        });
+      } catch (err) {
+        container.innerHTML = "Error loading signals.";
+      }
+    }
+
+    document.getElementById("refresh").onclick = loadSignals;
+    setInterval(loadSignals, 60000); // Auto-refresh every 60 sec
+    loadSignals();
+  </script>
+</body>
+</html>
