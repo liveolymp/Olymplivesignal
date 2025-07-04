@@ -2,17 +2,71 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Olymp Signal by Shubham</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Olymp Signal Dashboard</title>
+<style>
+  body { font-family: Arial, sans-serif; margin:0; background:#111; color:#eee; }
+  #passwordScreen, #introPopup, #mainContent { display: none; }
+  #passwordScreen {
+    position: fixed; top:0; left:0; right:0; bottom:0;
+    background:#222; display: flex; justify-content:center; align-items:center; flex-direction: column;
+  }
+  #passwordScreen input {
+    font-size: 1.2rem; padding: 0.5rem; margin-top: 1rem; width: 200px; border-radius: 5px; border:none;
+  }
+  #introPopup {
+    position: fixed; top: 20%; left: 50%; transform: translateX(-50%);
+    background: #0f0; color:#000; padding: 20px 40px; border-radius: 10px;
+    font-size: 1.5rem; font-weight: bold;
+    box-shadow: 0 0 15px #0f0;
+    z-index: 10;
+  }
+  #mainContent {
+    padding: 20px;
+  }
+</style>
 </head>
 <body>
-  <h1>📡 Olymp Signal by Shubham</h1>
-  <div id="mode-toggle">🌙 Toggle Dark Mode</div>
-  <div id="time">--:--</div>
-  <div id="signals"></div>
-  <audio id="alertSound" src="alert.mp3" preload="auto"></audio>
-  <script src="script.js"></script>
+  <div id="passwordScreen">
+    <label for="pwdInput">Enter Password:</label>
+    <input type="password" id="pwdInput" placeholder="Password" autofocus />
+  </div>
+  <div id="introPopup">Welcome to Modanwal Family 💪😁</div>
+  <div id="mainContent">
+    <h1>Olymp Signal Dashboard</h1>
+    <p>Content goes here...</p>
+  </div>
+
+<script>
+  const PASSWORD = "221303";
+  const passwordScreen = document.getElementById('passwordScreen');
+  const introPopup = document.getElementById('introPopup');
+  const mainContent = document.getElementById('mainContent');
+  const pwdInput = document.getElementById('pwdInput');
+
+  function showIntro() {
+    introPopup.style.display = 'block';
+    setTimeout(() => {
+      introPopup.style.display = 'none';
+      mainContent.style.display = 'block';
+    }, 3000);
+  }
+
+  pwdInput.addEventListener('keyup', (e) => {
+    if (e.key === 'Enter') {
+      if (pwdInput.value === PASSWORD) {
+        passwordScreen.style.display = 'none';
+        showIntro();
+      } else {
+        alert('Incorrect Password! Try again.');
+        pwdInput.value = '';
+      }
+    }
+  });
+
+  // Show password screen on load
+  passwordScreen.style.display = 'flex';
+</script>
 </body>
 </html>

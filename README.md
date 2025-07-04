@@ -1,35 +1,23 @@
-# Olymp Live Signal
 
-Transparent GitHub Pages site that publishes buy/sell signals for Olymp Trade
-forex pairs. Every data update is committed to the Git log for full traceability.
+# Olymp Signal Dashboard
 
-## 📦 Local Setup
+This is the complete dashboard for Olymp Signal website with all requested features:
 
-```bash
-git clone https://github.com/<your‑user>/olymplivesignal.git
-cd olymplivesignal
-python -m http.server 8000
-# visit http://localhost:8000
-```
+- Password protection with password: 221303
+- Intro popup: "Welcome to Modanwal Family 💪😁" after successful login
+- Placeholder for main content (signals, UI, etc.)
+- Responsive and styled to match APK preferences (to be expanded)
+- To deploy: Upload to GitHub Pages or any static web host
 
-## 🚀 One‑Click Deploy
+## Usage
 
-1. Create **public** repo `olymplivesignal` on GitHub.
-2. Push this code to `main`.
-3. In **Settings → Pages**, choose **Deploy from a branch**, root folder.
-4. Wait ~60 seconds; your site appears at  
-   `https://<your‑user>.github.io/olymplivesignal/`.
+1. Open the `index.html` in a browser or deploy on GitHub Pages.  
+2. Enter password `221303` to access the dashboard.  
+3. See the welcome popup, then the dashboard content appears.
 
-## 🌐 Custom Domain
+## Next Steps
 
-1. Register a free domain (e.g. `olymplivesignal.tk` on Freenom).
-2. Add a CNAME record pointing to `<your‑user>.github.io`.
-3. Add a plain‑text file named **CNAME** in the repo with the domain inside.
-4. Commit & push. GitHub Pages will request an SSL certificate automatically.
+- Add real signal data, live updates, notifications, and filters here.
+- Customize UI fully to match APK styling.
 
-## 🛠 Updating Signals
-
-*Manual*: edit `signals.json`, commit, push.  
-*Automated*: run your signal‑generation script and `git commit -am "new signal"`.
-
-MIT License © 2025
+Enjoy!
