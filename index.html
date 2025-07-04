@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -16,21 +15,19 @@
   <div id="introPopup">Welcome to Modanwal Family 💪😁</div>
 
   <header>
-    <img src="assets/logo.png" alt="Olymp Signal Logo" class="logo"/>
     <h1>Olymp Signal by Shubham</h1>
     <button id="refreshBtn">🔄 Refresh</button>
   </header>
 
-  <main id="mainContent">
+  <main id="mainContent" style="display:none">
     <div class="filters">
-      <label><input type="checkbox" id="rsiFilter"> RSI</label>
-      <label><input type="checkbox" id="volumeFilter"> Volume</label>
-      <label><input type="checkbox" id="breakoutFilter"> Breakout</label>
+      <label><input type="checkbox" id="rsiFilter" checked> RSI</label>
+      <label><input type="checkbox" id="volumeFilter" checked> Volume</label>
+      <label><input type="checkbox" id="breakoutFilter" checked> Breakout</label>
     </div>
     <div id="signalCards" class="card-container"></div>
   </main>
 
-  <audio id="notificationSound" src="assets/notify.mp3" preload="auto"></audio>
   <script src="script.js"></script>
 </body>
 </html>
