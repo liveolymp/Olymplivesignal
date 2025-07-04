@@ -2,71 +2,45 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Olymp Signal Dashboard</title>
-<style>
-  body { font-family: Arial, sans-serif; margin:0; background:#111; color:#eee; }
-  #passwordScreen, #introPopup, #mainContent { display: none; }
-  #passwordScreen {
-    position: fixed; top:0; left:0; right:0; bottom:0;
-    background:#222; display: flex; justify-content:center; align-items:center; flex-direction: column;
-  }
-  #passwordScreen input {
-    font-size: 1.2rem; padding: 0.5rem; margin-top: 1rem; width: 200px; border-radius: 5px; border:none;
-  }
-  #introPopup {
-    position: fixed; top: 20%; left: 50%; transform: translateX(-50%);
-    background: #0f0; color:#000; padding: 20px 40px; border-radius: 10px;
-    font-size: 1.5rem; font-weight: bold;
-    box-shadow: 0 0 15px #0f0;
-    z-index: 10;
-  }
-  #mainContent {
-    padding: 20px;
-  }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Olymp Signal Dashboard</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div id="passwordScreen">
-    <label for="pwdInput">Enter Password:</label>
-    <input type="password" id="pwdInput" placeholder="Password" autofocus />
+    <h2>Enter Password</h2>
+    <input type="password" id="pwdInput" placeholder="Enter Password" autofocus />
   </div>
+
   <div id="introPopup">Welcome to Modanwal Family 💪😁</div>
+
   <div id="mainContent">
-    <h1>Olymp Signal Dashboard</h1>
-    <p>Content goes here...</p>
+    <header>
+      <h1>Olymp Signal Dashboard</h1>
+    </header>
+    <div class="filters">
+      <label><input type="checkbox" id="rsiFilter"> RSI Filter</label>
+      <label><input type="checkbox" id="volumeFilter"> Volume Filter</label>
+      <label><input type="checkbox" id="breakoutFilter"> Breakout Filter</label>
+    </div>
+    <table id="signalTable">
+      <thead>
+        <tr>
+          <th>Pair</th>
+          <th>Action</th>
+          <th>Entry Time</th>
+          <th>Exit Time</th>
+          <th>Strength</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Signals will populate here -->
+      </tbody>
+    </table>
   </div>
 
-<script>
-  const PASSWORD = "221303";
-  const passwordScreen = document.getElementById('passwordScreen');
-  const introPopup = document.getElementById('introPopup');
-  const mainContent = document.getElementById('mainContent');
-  const pwdInput = document.getElementById('pwdInput');
-
-  function showIntro() {
-    introPopup.style.display = 'block';
-    setTimeout(() => {
-      introPopup.style.display = 'none';
-      mainContent.style.display = 'block';
-    }, 3000);
-  }
-
-  pwdInput.addEventListener('keyup', (e) => {
-    if (e.key === 'Enter') {
-      if (pwdInput.value === PASSWORD) {
-        passwordScreen.style.display = 'none';
-        showIntro();
-      } else {
-        alert('Incorrect Password! Try again.');
-        pwdInput.value = '';
-      }
-    }
-  });
-
-  // Show password screen on load
-  passwordScreen.style.display = 'flex';
-</script>
+  <audio id="notificationSound" src="notify.mp3" preload="auto"></audio>
+  <script src="script.js"></script>
 </body>
 </html>
