@@ -2,10 +2,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Olymp Signal Dashboard</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Olymp Signal by Shubham</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div id="passwordScreen">
@@ -15,32 +15,27 @@
 
   <div id="introPopup">Welcome to Modanwal Family 💪😁</div>
 
-  <div id="mainContent">
-    <header>
-      <h1>Olymp Signal Dashboard</h1>
-    </header>
+  <header>
+    <img src="assets/logo.png" alt="Olymp Signal Logo" class="logo"/>
+    <h1>Olymp Signal by Shubham</h1>
+    <button id="refreshBtn">🔄 Refresh</button>
+  </header>
+
+  <main id="mainContent">
     <div class="filters">
-      <label><input type="checkbox" id="rsiFilter"> RSI Filter</label>
-      <label><input type="checkbox" id="volumeFilter"> Volume Filter</label>
-      <label><input type="checkbox" id="breakoutFilter"> Breakout Filter</label>
+      <label><input type="checkbox" id="rsiFilter"> RSI</label>
+      <label><input type="checkbox" id="volumeFilter"> Volume</label>
+      <label><input type="checkbox" id="breakoutFilter"> Breakout</label>
     </div>
     <table id="signalTable">
       <thead>
-        <tr>
-          <th>Pair</th>
-          <th>Action</th>
-          <th>Entry Time</th>
-          <th>Exit Time</th>
-          <th>Strength</th>
-        </tr>
+        <tr><th>Pair</th><th>Action</th><th>Entry</th><th>Exit</th><th>Strength</th><th>Chart</th></tr>
       </thead>
-      <tbody>
-        <!-- Signals will populate here -->
-      </tbody>
+      <tbody></tbody>
     </table>
-  </div>
+  </main>
 
-  <audio id="notificationSound" src="notify.mp3" preload="auto"></audio>
+  <audio id="notificationSound" src="assets/notify.mp3" preload="auto"></audio>
   <script src="script.js"></script>
 </body>
 </html>
