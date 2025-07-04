@@ -1,97 +1,19 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Olymp Signal by Shubham</title>
-  <style>
-    body {
-      margin: 0;
-      background-color: #111827;
-      color: white;
-      font-family: Arial, sans-serif;
-    }
-    header {
-      background: #1f2937;
-      padding: 1rem;
-      text-align: center;
-      font-size: 1.5rem;
-      font-weight: bold;
-    }
-    #signal-container {
-      padding: 1rem;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1rem;
-    }
-    .card {
-      background: #1e40af;
-      padding: 1rem;
-      border-radius: 12px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-    }
-    .card strong {
-      display: block;
-      margin-bottom: 0.5rem;
-    }
-    #refresh {
-      position: fixed;
-      top: 1rem;
-      right: 1rem;
-      background: #10b981;
-      color: white;
-      border: none;
-      padding: 0.5rem 1rem;
-      border-radius: 6px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="logo.png" type="image/png" />
 </head>
 <body>
-  <header>Olymp Signal by Shubham</header>
-  <button id="refresh">Refresh</button>
-  <div id="signal-container">Connecting to live engine...</div>
-
-  <script>
-    const API_URL = "https://live-olymp-engine.up.railway.app/api/latest-signals"; // Replace with permanent URL when migrated
-
-    async function loadSignals(retries = 5) {
-      const container = document.getElementById("signal-container");
-      container.innerHTML = "Connecting to live engine...";
-      try {
-        const res = await fetch(API_URL);
-        const data = await res.json();
-        if (!data.length) {
-          container.innerHTML = "No strong signals right now.";
-          return;
-        }
-        container.innerHTML = "";
-        data.forEach(signal => {
-          const div = document.createElement("div");
-          div.className = "card";
-          div.innerHTML = `
-            <strong>Pair:</strong> ${signal.pair}<br/>
-            <strong>Action:</strong> ${signal.action}<br/>
-            <strong>Strength:</strong> ${signal.strength}<br/>
-            <strong>Entry:</strong> ${signal.entry}<br/>
-            <strong>Exit:</strong> ${signal.exit}<br/>
-          `;
-          container.appendChild(div);
-        });
-      } catch (err) {
-        if (retries > 0) {
-          container.innerHTML = "Retrying to connect...";
-          setTimeout(() => loadSignals(retries - 1), 3000);
-        } else {
-          container.innerHTML = "Error loading signals. Please try again later.";
-        }
-      }
-    }
-
-    document.getElementById("refresh").onclick = () => loadSignals();
-    setInterval(loadSignals, 60000); // Auto-refresh every 60 sec
-    loadSignals();
-  </script>
-</body>
+  <header>
+    <img src="logo.png" alt="Logo" class="logo" />
+    <h1>Olymp Signal by Shubham</h1>
+    <button onclick="fetchSignals()">🔄 Refresh</button>
+  </header>  <main id="signal-container">
+    <p>Loading signals...</p>
+  </main>  <footer>
+    <p>Auto-refreshing every 60 seconds</p>
+  </footer>  <script src="script.js"></script></body>
 </html>
