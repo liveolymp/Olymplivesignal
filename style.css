@@ -1,33 +1,24 @@
 
 body {
-  font-family: Arial, sans-serif;
-  background: #f8f9fa;
-  margin: 0;
-  padding: 0;
+  font-family: sans-serif;
   text-align: center;
+  background: #f8f9fa;
+  transition: background 0.3s, color 0.3s;
 }
-.container {
-  padding: 20px;
+body.dark {
+  background: #121212;
+  color: white;
 }
-.signal-container {
-  margin-top: 20px;
+#mode-toggle {
+  cursor: pointer;
+  margin: 10px;
 }
 .signal {
-  padding: 10px;
-  margin: 10px auto;
-  width: 90%;
-  border-radius: 10px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  border-radius: 12px;
+  margin: 20px auto;
+  padding: 16px;
+  max-width: 300px;
+  box-shadow: 0 0 8px rgba(0,0,0,0.1);
 }
-.signal.buy {
-  background-color: #d4f7d4;
-  border-left: 6px solid #28a745;
-}
-.signal.sell {
-  background-color: #fddddd;
-  border-left: 6px solid #dc3545;
-}
-.time-display {
-  font-size: 1.2rem;
-  margin: 10px 0;
-}
+.signal.buy { background: #e6ffec; border-left: 5px solid #00c853; }
+.signal.sell { background: #ffebee; border-left: 5px solid #d50000; }

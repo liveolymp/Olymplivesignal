@@ -2,17 +2,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Olymp Signal by Shubham</title>
-  <link rel="stylesheet" href="style.css"/>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container">
-    <h1>📡 Olymp Signal by Shubham</h1>
-    <p id="time" class="time-display">--:-- --</p>
-    <div id="signals" class="signal-container">Loading signals...</div>
-  </div>
+  <h1>📡 Olymp Signal by Shubham</h1>
+  <div id="mode-toggle">🌙 Toggle Dark Mode</div>
+  <div id="time">--:--</div>
+  <div id="signals"></div>
+  <audio id="alertSound" src="alert.mp3" preload="auto"></audio>
   <script src="script.js"></script>
 </body>
 </html>
