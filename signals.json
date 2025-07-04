@@ -2,13 +2,12 @@
   "generated_at": "2025-07-04T04:52:13.389941Z",
   "signals": [
     {
-      "forex": "EUR/USD",
-      "type": "BUY",
-      "strength": 90,
+      "forex": "GBP/JPY",
+      "type": "SELL",
+      "strength": 92,
       "entry_time": "2025-07-04T12:30:00Z",
       "timeframe": "1m"
     }
   ]
 }
-git commit -am "Update signal for testing"
-git push
+
