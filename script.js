@@ -5,7 +5,7 @@ const pwdScreen = document.getElementById("passwordScreen");
 const introPopup = document.getElementById("introPopup");
 const mainContent = document.getElementById("mainContent");
 const pwdInput = document.getElementById("pwdInput");
-const signalTable = document.querySelector("#signalTable tbody");
+const signalCards = document.getElementById("signalCards");
 const refreshBtn = document.getElementById("refreshBtn");
 const sound = document.getElementById("notificationSound");
 
@@ -15,7 +15,7 @@ function showIntro() {
     introPopup.style.display = "none";
     mainContent.style.display = "block";
     loadSignals();
-  }, 2500);
+  }, 2000);
 }
 
 if (!isAuthenticated) {
@@ -36,23 +36,27 @@ if (!isAuthenticated) {
 }
 
 refreshBtn.onclick = loadSignals;
+setInterval(loadSignals, 10000); // auto-refresh every 10 sec
 
 function loadSignals() {
   fetch("https://live.olympsignalapi.in/api/latest-signals")
     .then(res => res.json())
     .then(data => {
-      signalTable.innerHTML = "";
+      signalCards.innerHTML = "";
       data.forEach(sig => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${sig.pair}</td>
-          <td class="${sig.action === 'BUY' ? 'action-buy' : 'action-sell'}">${sig.action}</td>
-          <td>${sig.entry}</td>
-          <td>${sig.exit}</td>
-          <td>${sig.strength}</td>
-          <td><a href="${sig.chart_url}" target="_blank">🔍 View</a></td>`;
-        signalTable.appendChild(row);
+        const div = document.createElement("div");
+        div.className = "signal-card";
+        div.innerHTML = `
+          <h3>${sig.pair}</h3>
+          <p><strong>Action:</strong> <span class="${sig.action === 'BUY' ? 'action-buy' : 'action-sell'}">${sig.action}</span></p>
+          <p><strong>Entry:</strong> ${sig.entry}</p>
+          <p><strong>Exit:</strong> ${sig.exit}</p>
+          <p><strong>Strength:</strong> ${sig.strength}</p>
+          <p><a href="${sig.chart_url}" target="_blank">🔍 View Chart</a></p>
+        `;
+        signalCards.appendChild(div);
       });
-      sound.play();
-    });
+      if (data.length > 0) sound.play();
+    })
+    .catch(() => console.error("Failed to fetch signals."));
 }
