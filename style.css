@@ -1,13 +1,8 @@
-
 body {
   font-family: 'Segoe UI', sans-serif;
   background: #0d1117;
   color: #e6edf3;
   margin: 0;
-}
-.logo {
-  width: 50px;
-  margin-right: 10px;
 }
 #passwordScreen {
   position: fixed; top: 0; left: 0; right: 0; bottom: 0;
