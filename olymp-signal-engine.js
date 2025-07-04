@@ -1,62 +1,83 @@
 
 const express = require('express');
+const axios = require('axios');
 const cors = require('cors');
 const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(cors());
 
-const pairs = ['EURUSD', 'GBPUSD', 'USDJPY', 'AUDUSD', 'USDCAD'];
+const pairs = ['EURUSDT', 'GBPUSDT', 'USDJPY', 'AUDUSDT', 'USDCAD'];
+const pairMap = {
+  'EURUSDT': 'EURUSD',
+  'GBPUSDT': 'GBPUSD',
+  'USDJPY': 'USDJPY',
+  'AUDUSDT': 'AUDUSD',
+  'USDCAD': 'USDCAD'
+};
 
-function getRSI() {
-  return 50 + Math.random() * 50;
+async function fetchCandles(symbol) {
+  const url = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1m&limit=21`;
+  const res = await axios.get(url);
+  return res.data.map(c => ({
+    close: parseFloat(c[4]),
+    volume: parseFloat(c[5])
+  }));
 }
 
-function getVolume() {
-  return 1000 + Math.random() * 2000;
-}
-
-function getBreakout() {
-  return Math.random() < 0.4;
-}
-
-function generateSignal(pair) {
-  const rsi = getRSI();
-  const volume = getVolume();
-  const breakout = getBreakout();
-
-  if (rsi > 60 && volume > 1200 && breakout) {
-    return {
-      pair,
-      action: 'BUY',
-      entry: (1 + Math.random() * 0.01).toFixed(5),
-      exit: (1 + Math.random() * 0.01).toFixed(5),
-      strength: Math.floor(80 + Math.random() * 20) + '%',
-      chart_url: `https://www.tradingview.com/chart/?symbol=${pair}`
-    };
-  } else if (rsi < 40 && volume > 1200 && breakout) {
-    return {
-      pair,
-      action: 'SELL',
-      entry: (1 + Math.random() * 0.01).toFixed(5),
-      exit: (1 + Math.random() * 0.01).toFixed(5),
-      strength: Math.floor(80 + Math.random() * 20) + '%',
-      chart_url: `https://www.tradingview.com/chart/?symbol=${pair}`
-    };
-  } else {
-    return null;
+function calculateRSI(candles) {
+  let gains = 0, losses = 0;
+  for (let i = 1; i < candles.length; i++) {
+    const diff = candles[i].close - candles[i - 1].close;
+    if (diff > 0) gains += diff;
+    else losses -= diff;
   }
+  const avgGain = gains / 14;
+  const avgLoss = losses / 14;
+  const rs = avgGain / (avgLoss || 1);
+  return 100 - (100 / (1 + rs));
+}
+
+function isBreakout(candles) {
+  const lastClose = candles[candles.length - 1].close;
+  const maxClose = Math.max(...candles.slice(0, -1).map(c => c.close));
+  const minClose = Math.min(...candles.slice(0, -1).map(c => c.close));
+  return lastClose > maxClose || lastClose < minClose;
+}
+
+async function generateSignals() {
+  const results = [];
+  for (let symbol of pairs) {
+    try {
+      const candles = await fetchCandles(symbol);
+      const rsi = calculateRSI(candles);
+      const avgVol = candles.slice(0, -1).reduce((a, b) => a + b.volume, 0) / 14;
+      const currVol = candles[candles.length - 1].volume;
+      const breakout = isBreakout(candles);
+
+      if ((rsi > 60 || rsi < 40) && currVol > avgVol && breakout) {
+        const action = rsi > 60 ? 'BUY' : 'SELL';
+        results.push({
+          pair: pairMap[symbol],
+          action,
+          strength: Math.floor(80 + Math.random() * 15) + '%',
+          entry: candles[candles.length - 1].close.toFixed(5),
+          exit: (candles[candles.length - 1].close * (action === 'BUY' ? 1.002 : 0.998)).toFixed(5),
+          chart_url: `https://tradingview.com/chart/?symbol=${pairMap[symbol]}`
+        });
+      }
+    } catch (e) {
+      console.log(`Error fetching for ${symbol}:`, e.message);
+    }
+  }
+  return results;
 }
 
 let currentSignals = [];
 
-function updateSignals() {
-  currentSignals = [];
-  pairs.forEach(pair => {
-    const signal = generateSignal(pair);
-    if (signal) currentSignals.push(signal);
-  });
-  console.log('Updated signals:', currentSignals);
+async function updateSignals() {
+  currentSignals = await generateSignals();
+  console.log('Signals Updated:', currentSignals);
 }
 
 updateSignals();
@@ -67,5 +88,5 @@ app.get('/api/latest-signals', (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`Olymp Signal Engine running on port ${port}`);
+  console.log(`Live Olymp Signal Engine running on port ${port}`);
 });

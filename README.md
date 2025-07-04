@@ -1,18 +1,21 @@
+# Live Olymp Signal Engine
 
-# Olymp Signal by Shubham (Live Dashboard)
+This is the backend engine that fetches real-time Forex data and applies:
+- RSI filter (14)
+- Volume spike
+- Breakout detection
+to deliver high-accuracy Buy/Sell signals (80%+ only).
 
-- Password: 221303 (only once per session)
-- Intro message: "Welcome to Modanwal Family 💪😁"
-- Olymp Trade Forex pairs only
-- Real-time signal fetch (engine-connected)
-- Entry/Exit times, Strength, Chart Preview
-- RSI, Volume, Breakout filters
-- Mobile-friendly, sound alerts, refresh button
+## How to Run
 
-## How to Use
+```bash
+npm install
+node index.js
+```
 
-1. Open index.html or deploy on GitHub Pages.
-2. Enter password once.
-3. Live signals auto-update or click Refresh.
+API will be available at:
+```
+http://localhost:3000/api/latest-signals
+```
 
-> Created with ❤️ by Shubham + ChatGPT
+Auto-updates every 60 seconds.

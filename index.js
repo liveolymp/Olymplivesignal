@@ -1,0 +1,1 @@
+require('./engine/olymp-signal-engine.js');
