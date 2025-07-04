@@ -51,14 +51,14 @@
 <body>
   <header>Olymp Signal by Shubham</header>
   <button id="refresh">Refresh</button>
-  <div id="signal-container">Loading signals...</div>
+  <div id="signal-container">Connecting to live engine...</div>
 
   <script>
-    const API_URL = "https://olymp-signal.onrender.com/api/latest-signals"; // Replace with your real backend URL
+    const API_URL = "https://olymp-signal.onrender.com/api/latest-signals"; // Replace with permanent URL when migrated
 
-    async function loadSignals() {
+    async function loadSignals(retries = 5) {
       const container = document.getElementById("signal-container");
-      container.innerHTML = "Loading signals...";
+      container.innerHTML = "Connecting to live engine...";
       try {
         const res = await fetch(API_URL);
         const data = await res.json();
@@ -80,11 +80,16 @@
           container.appendChild(div);
         });
       } catch (err) {
-        container.innerHTML = "Error loading signals.";
+        if (retries > 0) {
+          container.innerHTML = "Retrying to connect...";
+          setTimeout(() => loadSignals(retries - 1), 3000);
+        } else {
+          container.innerHTML = "Error loading signals. Please try again later.";
+        }
       }
     }
 
-    document.getElementById("refresh").onclick = loadSignals;
+    document.getElementById("refresh").onclick = () => loadSignals();
     setInterval(loadSignals, 60000); // Auto-refresh every 60 sec
     loadSignals();
   </script>
