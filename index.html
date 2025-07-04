@@ -7,27 +7,13 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="passwordScreen">
-    <h2>Enter Password</h2>
-    <input type="password" id="pwdInput" placeholder="Enter Password" autofocus />
-  </div>
-
-  <div id="introPopup">Welcome to Modanwal Family 💪😁</div>
-
   <header>
     <h1>Olymp Signal by Shubham</h1>
     <button id="refreshBtn">🔄 Refresh</button>
   </header>
-
-  <main id="mainContent" style="display:none">
-    <div class="filters">
-      <label><input type="checkbox" id="rsiFilter" checked> RSI</label>
-      <label><input type="checkbox" id="volumeFilter" checked> Volume</label>
-      <label><input type="checkbox" id="breakoutFilter" checked> Breakout</label>
-    </div>
-    <div id="signalCards" class="card-container"></div>
+  <main id="signalContainer">
+    <p>Loading signals...</p>
   </main>
-
   <script src="script.js"></script>
 </body>
 </html>
