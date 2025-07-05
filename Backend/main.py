@@ -65,5 +65,14 @@ def get_signals():
   "EURUSDT", "GBPUSDT", "JPYUSDT", "AUDUSDT", "CADUSDT", "CHFUSDT", "NZDUSDT",
   "BTCUSDT", "ETHUSDT", "LTCUSDT", "XRPUSDT", "BCHUSDT", "ETCUSDT", "EOSUSDT",
   "DOTUSDT", "LINKUSDT", "TRXUSDT", "CRVUSDT", "XAUSDT", "XAGUSDT"
-]
-    return {"signals": [generate_signal(s) for s in symbols]}
+    ]
+@app.get("/api/latest-signals")
+def get_signals():
+    output = []
+    for symbol in symbols:
+        try:
+            result = generate_signal(symbol)
+            output.append(result)
+        except Exception as e:
+            print(f"Error on {symbol}: {e}")
+    return {"signals": output}
