@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import requests, os, statistics
+import requests, statistics
 from datetime import datetime, timedelta
 
 app = FastAPI()
@@ -13,19 +13,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-proxies = {
-    "http": "http://vfrutron:cqe8c72qjinn@38.154.227.167:5868",
-    "https": "http://vfrutron:cqe8c72qjinn@38.154.227.167:5868"
-}
-
 def get_klines(symbol="BTCUSDT", interval="1m", limit=50):
-    url = "https://api.binance.com/api/v3/klines"
+    url = "https://testnet.binance.vision/api/v3/klines"
     params = {
         "symbol": symbol,
         "interval": interval,
         "limit": limit
     }
-    response = requests.get(url, params=params, proxies=proxies, timeout=10)
+    response = requests.get(url, params=params, timeout=10)
     response.raise_for_status()
     return response.json()
 
@@ -62,7 +57,7 @@ def generate_signal(symbol):
 
 @app.get("/")
 def root():
-    return {"message": "Olymp Signal Backend via Proxy working"}
+    return {"message": "Olymp Signal (Testnet) backend live"}
 
 @app.get("/api/latest-signals")
 def get_signals():
