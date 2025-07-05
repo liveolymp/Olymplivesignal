@@ -5,20 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Olymp Signal by Shubham</title>
   <style>
-    body { font-family: Arial, sans-serif; background: #111; color: #eee; margin: 0; padding: 1rem; }
-    h1 { text-align: center; color: #0f0; }
-    #refreshBtn { background: #0f0; color: #000; padding: 10px 20px; border: none; font-weight: bold; border-radius: 8px; cursor: pointer; margin: 1rem auto; display: block; }
-    .card { background: #222; border: 1px solid #0f0; border-radius: 10px; padding: 1rem; margin: 1rem auto; max-width: 400px; }
-    .strong { color: #0f0; }
-    .moderate { color: #ff0; }
-    .weak { color: #f00; }
+    body { font-family: sans-serif; background: #0d1117; color: white; margin: 0; padding: 0; }
+    header { padding: 1rem; background: #161b22; text-align: center; font-size: 1.5rem; font-weight: bold; }
+    #signals { display: grid; gap: 1rem; padding: 1rem; }
+    .card { background: #1f2937; padding: 1rem; border-radius: 1rem; box-shadow: 0 0 10px #000; }
+    .strength { font-weight: bold; }
   </style>
 </head>
 <body>
-  <h1>Olymp Signal by Shubham</h1>
-  <button id="refreshBtn">🔄 Refresh</button>
-  <div id="signals">Loading signals...</div>
-
+  <header>🔺 Olymp Signal by Shubham 🔺</header>
+  <section id="signals">
+    <div id="loading">Loading signal...</div>
+  </section>
   <script src="script.js"></script>
 </body>
 </html>
