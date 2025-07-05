@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:8000/api/latest-signals";  // Change to Railway URL after deployment
+const API_URL = "https://olymp-signal-backend.up.railway.app/api/latest-signals";
 
 async function loadSignals() {
   const container = document.getElementById("signal-container");
