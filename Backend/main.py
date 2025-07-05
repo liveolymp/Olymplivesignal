@@ -20,7 +20,16 @@ session.proxies = {
 }
 
 # Binance client with proxy
-client = Client(API_KEY, API_SECRET, requests_params={"session": session})
+client = Client(
+    API_KEY,
+    API_SECRET,
+    requests_params={
+        "proxies": {
+            "http": "http://vfrutron:cqe8c72qjinn@38.154.227.167:5868",
+            "https": "http://vfrutron:cqe8c72qjinn@38.154.227.167:5868"
+        }
+    }
+)
 
 app = FastAPI()
 
