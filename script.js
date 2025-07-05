@@ -1,38 +1,43 @@
-const apiUrl = "https://olymp-signal-backend.onrender.com/api/latest-signals";
-
-const strengthLabel = (strength) => {
-  if (strength >= 81) return "strong";
-  if (strength >= 51) return "moderate";
-  return "weak";
-};
+const API_URL = "https://olymp-signal-backend.onrender.com/api/latest-signals";
 
 async function fetchSignals() {
-  const container = document.getElementById("signals");
-  container.innerHTML = "Loading signals...";
   try {
-    const res = await fetch(apiUrl);
+    const res = await fetch(API_URL);
     const data = await res.json();
-    if (!data.signals || data.signals.length === 0) {
-      container.innerHTML = "<p>No signals available.</p>";
+    const container = document.getElementById("signal-container");
+    const now = new Date().toLocaleTimeString();
+    document.getElementById("updated-time").innerText = "Last updated: " + now;
+
+    // Filter only signals with strength 80+
+    const strongSignals = data.signals
+      .filter(signal => signal.strength >= 80)
+      .slice(0, 2);  // Only top 2
+
+    container.innerHTML = "";
+
+    if (strongSignals.length === 0) {
+      container.innerHTML = "<p>No strong signals right now (80%+)</p>";
       return;
     }
-    container.innerHTML = "";
-    data.signals.forEach(signal => {
-      const card = document.createElement("div");
-      card.className = "card";
-      card.innerHTML = `
-        <p><strong>Pair:</strong> ${signal.pair}</p>
-        <p><strong>Action:</strong> ${signal.action}</p>
-        <p><strong>Timeframe:</strong> ${signal.timeframe}</p>
-        <p><strong>Buy Time:</strong> ${signal.buy_time}</p>
-        <p><strong>Strength:</strong> <span class="${strengthLabel(signal.strength)}">${signal.strength}%</span></p>
+
+    strongSignals.forEach((signal) => {
+      const div = document.createElement("div");
+      let color = "green";
+      div.className = "card " + color;
+      div.innerHTML = `
+        <h2>${signal.pair}</h2>
+        <p>Action: <strong>${signal.action}</strong></p>
+        <p>Timeframe: ${signal.timeframe}</p>
+        <p>Buy Time: ${signal.buy_time}</p>
+        <p>Strength: ${signal.strength}%</p>
       `;
-      container.appendChild(card);
+      container.appendChild(div);
     });
+
   } catch (err) {
-    container.innerHTML = "<p>Error loading signals. Please try again later.</p>";
+    document.getElementById("signal-container").innerText = "⚠️ Error loading signal.";
   }
 }
 
-document.getElementById("refreshBtn").addEventListener("click", fetchSignals);
 fetchSignals();
+setInterval(fetchSignals, 30000);
