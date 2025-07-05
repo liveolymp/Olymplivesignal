@@ -19,7 +19,8 @@ session.proxies = {
     'https': 'http://vfrutron:cqe8c72qjinn@38.154.227.167:5868'
 }
 
-# Binance client with proxy
+from binance.client import Client
+
 client = Client(
     API_KEY,
     API_SECRET,
