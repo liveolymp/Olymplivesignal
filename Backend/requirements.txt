@@ -1,5 +1,4 @@
 fastapi
 uvicorn
-python-binance
-numpy
 python-dotenv
+requests
