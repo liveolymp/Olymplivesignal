@@ -2,6 +2,8 @@ fastapi
 uvicorn
 requests
 python-dotenv
-Flask==2.2.5
+Flask
 requests
+pandas
+numby
 gunicorn
