@@ -2,5 +2,5 @@ fastapi
 uvicorn
 python-binance
 numpy
-ta-lib
+ta-lib-binary
 python-dotenv
