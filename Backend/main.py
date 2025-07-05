@@ -37,23 +37,39 @@ def calculate_rsi(closes, period=14):
     return round(100 - (100 / (1 + rs)), 2)
 
 def generate_signal(symbol):
-    klines = get_klines(symbol=symbol)
-    closes = [float(k[4]) for k in klines]
-    volumes = [float(k[5]) for k in klines]
-    rsi = calculate_rsi(closes)
-    avg_vol = statistics.mean(volumes)
-    strength = min(100, int((volumes[-1] / avg_vol) * 100)) if avg_vol else 0
-    action = "HOLD"
-    if rsi < 30: action = "BUY"
-    elif rsi > 70: action = "SELL"
-    ist_time = datetime.utcnow() + timedelta(hours=5, minutes=30)
-    return {
-        "pair": symbol.replace("USDT", "/USDT"),
-        "action": action,
-        "timeframe": "1m",
-        "buy_time": ist_time.strftime("%I:%M %p"),
-        "strength": strength
-    }
+    try:
+        klines = client.get_klines(symbol=symbol, interval="1m", limit=50)
+        closes = [float(k[4]) for k in klines]
+        volumes = [float(k[5]) for k in klines]
+
+        if len(closes) < 20:
+            return None
+
+        rsi = talib.RSI(np.array(closes), timeperiod=14)[-1]
+        volume_avg = sum(volumes[-10:]) / 10
+        current_volume = volumes[-1]
+
+        # Signal logic
+        if rsi < 30 and current_volume > volume_avg:
+            action = "BUY"
+            strength = int((70 - rsi) + ((current_volume / volume_avg) * 10))
+        elif rsi > 70 and current_volume > volume_avg:
+            action = "SELL"
+            strength = int((rsi - 70) + ((current_volume / volume_avg) * 10))
+        else:
+            return None
+
+        return {
+            "pair": symbol.replace("USDT", "/USDT"),
+            "action": action,
+            "strength": min(strength, 100),
+            "timeframe": "1m",
+            "buy_time": datetime.now().strftime("%I:%M %p")
+        }
+
+    except Exception as e:
+        print(f"Error in generate_signal for {symbol}: {e}")
+        return None
 
 @app.get("/")
 def root():
