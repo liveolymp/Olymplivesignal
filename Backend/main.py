@@ -2,30 +2,29 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from binance.client import Client
 import numpy as np
-import talib
 from datetime import datetime
 import requests
 import os
 from dotenv import load_dotenv
 
-# Load API keys
+# Load credentials from .env
 load_dotenv()
 API_KEY = os.getenv("BINANCE_API_KEY")
 API_SECRET = os.getenv("BINANCE_API_SECRET")
 
-# Set up proxy session
+# Proxy setup (optional)
 session = requests.Session()
 session.proxies = {
     'http': 'http://vfrutron:cqe8c72qjinn@38.154.227.167:5868',
     'https': 'http://vfrutron:cqe8c72qjinn@38.154.227.167:5868'
 }
 
+# Binance client with proxy
 client = Client(API_KEY, API_SECRET, requests_params={"session": session})
 
-# FastAPI app
 app = FastAPI()
 
-# Enable CORS
+# Allow frontend to call API
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -33,14 +32,36 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Olymp-compatible pairs
+# Olymp Trade compatible pairs
 symbols = [
     "BTCUSDT", "ETHUSDT", "XRPUSDT", "LTCUSDT",
     "BNBUSDT", "ADAUSDT", "DOGEUSDT", "SOLUSDT",
     "EURUSDT", "GBPUSDT", "AUDUSDT", "JPYUSDT"
 ]
 
-# Signal generation function
+# Pure Python RSI calculation
+def calculate_rsi(prices, period=14):
+    prices = np.array(prices)
+    deltas = np.diff(prices)
+    seed = deltas[:period]
+    up = seed[seed >= 0].sum() / period
+    down = -seed[seed < 0].sum() / period
+    rs = up / down if down != 0 else 0
+    rsi = np.zeros_like(prices)
+    rsi[:period] = 100. - 100. / (1. + rs)
+
+    for i in range(period, len(prices)):
+        delta = deltas[i - 1]
+        gain = max(delta, 0)
+        loss = -min(delta, 0)
+        up = (up * (period - 1) + gain) / period
+        down = (down * (period - 1) + loss) / period
+        rs = up / down if down != 0 else 0
+        rsi[i] = 100. - 100. / (1. + rs)
+
+    return rsi
+
+# Signal logic
 def generate_signal(symbol):
     try:
         klines = client.get_klines(symbol=symbol, interval="1m", limit=50)
@@ -50,18 +71,18 @@ def generate_signal(symbol):
         if len(closes) < 20:
             return None
 
-        rsi = talib.RSI(np.array(closes), timeperiod=14)[-1]
+        rsi_series = calculate_rsi(closes)[-1]
         volume_avg = sum(volumes[-10:]) / 10
         current_volume = volumes[-1]
 
-        if rsi < 30 and current_volume > volume_avg:
+        if rsi_series < 30 and current_volume > volume_avg:
             action = "BUY"
-        elif rsi > 70 and current_volume > volume_avg:
+        elif rsi_series > 70 and current_volume > volume_avg:
             action = "SELL"
         else:
             return None
 
-        strength = int(min(abs(rsi - 50) + (current_volume / volume_avg) * 10, 100))
+        strength = int(min(abs(rsi_series - 50) + (current_volume / volume_avg) * 10, 100))
 
         return {
             "pair": symbol.replace("USDT", "/USDT"),
@@ -80,9 +101,9 @@ def get_signals():
     output = []
     for symbol in symbols:
         try:
-            signal = generate_signal(symbol)
-            if signal:
-                output.append(signal)
+            result = generate_signal(symbol)
+            if result:
+                output.append(result)
         except Exception as e:
             print(f"⚠️ Error on {symbol}: {e}")
     return {"signals": output}
