@@ -40,9 +40,9 @@ def analyze(pair):
     rsi = calculate_rsi(closes)
 
     action = None
-    if rsi < 30:
+    if rsi < 35:
         action = "Buy"
-    elif rsi > 70:
+    elif rsi > 65:
         action = "Sell"
 
     if not action:
@@ -51,11 +51,11 @@ def analyze(pair):
     avg_volume = np.mean(volumes[-15:])
     last_volume = volumes[0]
 
-    if last_volume < avg_volume * 1.2:  # Require volume spike
+    if last_volume < avg_volume * 1.05:
         return None
 
     strength = int(min(100, abs(rsi - 50) * 2))
-    if strength < 80:
+    if strength < 40:
         return None
 
     return {
@@ -81,7 +81,7 @@ def latest_signals():
 
 @app.route("/")
 def home():
-    return "✅ Olymp Signal Backend (Real Data) is running."
+    return "✅ Olymp Signal Backend (40%+ Strength Test Mode)"
 
 if __name__ == "__main__":
     app.run()
