@@ -1,7 +1,14 @@
-# Olymp Live Signal Backend (Proxy + Real API)
+# Olymp Signal Backend (TwelveData Version)
 
-## How to Use
+Live Forex/Crypto signal engine using RSI + Volume logic.
 
-1. Create `.env` file from `.env.example`
-2. Fill your Binance API Key and Secret
-3. Install dependencies:
+## Setup
+
+1. Copy `.env.example` → `.env`
+2. Replace with your TwelveData API key
+
+## Run Locally
+
+```bash
+pip install -r requirements.txt
+uvicorn main:app --reload
