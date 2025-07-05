@@ -1,4 +1,4 @@
-const API_URL = "https://olymp-signal-backend.onrender.com/api/latest-signals";
+fetch("https://olymp-signal-backend.onrender.com/api/latest-signals")
 
 async function fetchSignals() {
   try {
