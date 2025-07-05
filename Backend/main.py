@@ -7,20 +7,12 @@ import requests
 import os
 from dotenv import load_dotenv
 
-# Load credentials from .env
+# Load API keys
 load_dotenv()
 API_KEY = os.getenv("BINANCE_API_KEY")
 API_SECRET = os.getenv("BINANCE_API_SECRET")
 
-# Proxy setup (optional)
-session = requests.Session()
-session.proxies = {
-    'http': 'http://vfrutron:cqe8c72qjinn@38.154.227.167:5868',
-    'https': 'http://vfrutron:cqe8c72qjinn@38.154.227.167:5868'
-}
-
-from binance.client import Client
-
+# Set up Binance client with working proxy
 client = Client(
     API_KEY,
     API_SECRET,
@@ -32,9 +24,9 @@ client = Client(
     }
 )
 
+# FastAPI setup
 app = FastAPI()
 
-# Allow frontend to call API
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -42,7 +34,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Olymp Trade compatible pairs
+# Olymp-compatible pairs
 symbols = [
     "BTCUSDT", "ETHUSDT", "XRPUSDT", "LTCUSDT",
     "BNBUSDT", "ADAUSDT", "DOGEUSDT", "SOLUSDT",
@@ -71,7 +63,7 @@ def calculate_rsi(prices, period=14):
 
     return rsi
 
-# Signal logic
+# Generate signal
 def generate_signal(symbol):
     try:
         klines = client.get_klines(symbol=symbol, interval="1m", limit=50)
