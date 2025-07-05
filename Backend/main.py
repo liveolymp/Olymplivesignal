@@ -8,12 +8,12 @@ import requests
 import os
 from dotenv import load_dotenv
 
-# Load .env credentials
+# Load API keys
 load_dotenv()
 API_KEY = os.getenv("BINANCE_API_KEY")
 API_SECRET = os.getenv("BINANCE_API_SECRET")
 
-# Proxy setup (change this to your latest one if needed)
+# Set up proxy session
 session = requests.Session()
 session.proxies = {
     'http': 'http://vfrutron:cqe8c72qjinn@38.154.227.167:5868',
@@ -22,9 +22,10 @@ session.proxies = {
 
 client = Client(API_KEY, API_SECRET, requests_params={"session": session})
 
+# FastAPI app
 app = FastAPI()
 
-# CORS config
+# Enable CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -32,14 +33,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Olymp Trade compatible pairs (Binance format)
+# Olymp-compatible pairs
 symbols = [
     "BTCUSDT", "ETHUSDT", "XRPUSDT", "LTCUSDT",
     "BNBUSDT", "ADAUSDT", "DOGEUSDT", "SOLUSDT",
     "EURUSDT", "GBPUSDT", "AUDUSDT", "JPYUSDT"
 ]
 
-# Signal logic
+# Signal generation function
 def generate_signal(symbol):
     try:
         klines = client.get_klines(symbol=symbol, interval="1m", limit=50)
@@ -47,7 +48,6 @@ def generate_signal(symbol):
         volumes = [float(k[5]) for k in klines]
 
         if len(closes) < 20:
-            print(f"⚠️ Not enough data for {symbol}")
             return None
 
         rsi = talib.RSI(np.array(closes), timeperiod=14)[-1]
@@ -59,7 +59,6 @@ def generate_signal(symbol):
         elif rsi > 70 and current_volume > volume_avg:
             action = "SELL"
         else:
-            print(f"❌ No signal for {symbol}")
             return None
 
         strength = int(min(abs(rsi - 50) + (current_volume / volume_avg) * 10, 100))
@@ -76,15 +75,14 @@ def generate_signal(symbol):
         print(f"❗ Error in {symbol}: {e}")
         return None
 
-# API Endpoint
 @app.get("/api/latest-signals")
 def get_signals():
     output = []
     for symbol in symbols:
         try:
-            result = generate_signal(symbol)
-            if result:
-                output.append(result)
+            signal = generate_signal(symbol)
+            if signal:
+                output.append(signal)
         except Exception as e:
             print(f"⚠️ Error on {symbol}: {e}")
     return {"signals": output}
