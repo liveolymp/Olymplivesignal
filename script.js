@@ -10,7 +10,7 @@ async function fetchSignals() {
 
     // Filter only signals with strength 80+
     const strongSignals = data.signals
-      .filter(signal => signal.strength >= 80)
+      .filter(signal => signal.strength >= 65)
       .slice(0, 2);  // Only top 2
 
     container.innerHTML = "";
