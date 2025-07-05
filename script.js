@@ -1,5 +1,4 @@
-fetch("https://olymp-signal-backend.onrender.com/api/latest-signals")
-
+const apiURL = "https://olymp-signal-backend.onrender.com/api/latest-signals";
 async function fetchSignals() {
   try {
     const res = await fetch(API_URL);
