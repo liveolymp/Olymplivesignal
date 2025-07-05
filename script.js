@@ -1,0 +1,1 @@
+fetch('https://olymp-signal-backend.up.railway.app/api/latest-signals').then(r=>r.json()).then(d=>{document.getElementById('signals').innerText=JSON.stringify(d,null,2);});
