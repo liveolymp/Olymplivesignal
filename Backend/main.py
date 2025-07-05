@@ -1,86 +1,81 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from binance.client import Client
-import numpy as np
-from datetime import datetime
+import requests
 import os
 from dotenv import load_dotenv
+from datetime import datetime
 
 load_dotenv()
-API_KEY = os.getenv("BINANCE_API_KEY")
-API_SECRET = os.getenv("BINANCE_API_SECRET")
-
-# 🆕 New working proxy (tested):
-client = Client(
-    API_KEY,
-    API_SECRET,
-    requests_params={
-        "proxies": {
-            "http": "http://proxyuser:proxypass@146.190.65.20:8080",
-            "https": "http://proxyuser:proxypass@146.190.65.20:8080"
-        }
-    }
-)
+API_KEY = os.getenv("TWELVEDATA_API_KEY")
 
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], allow_methods=["*"], allow_headers=["*"]
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-symbols = ["BTCUSDT", "ETHUSDT", "XRPUSDT", "LTCUSDT", "EURUSDT", "GBPUSDT"]
+# Olymp/Binomo common pairs
+symbols = ["EUR/USD", "GBP/USD", "USD/JPY", "BTC/USD", "ETH/USD", "XAU/USD"]
 
-def calculate_rsi(prices, period=14):
-    prices = np.array(prices)
-    deltas = np.diff(prices)
-    seed = deltas[:period]
-    up = seed[seed >= 0].sum() / period
-    down = -seed[seed < 0].sum() / period
-    rs = up / down if down != 0 else 0
-    rsi = np.zeros_like(prices)
-    rsi[:period] = 100. - 100. / (1. + rs)
-    for i in range(period, len(prices)):
-        delta = deltas[i - 1]
-        gain = max(delta, 0)
-        loss = -min(delta, 0)
-        up = (up * (period - 1) + gain) / period
-        down = (down * (period - 1) + loss) / period
-        rs = up / down if down != 0 else 0
-        rsi[i] = 100. - 100. / (1. + rs)
-    return rsi
-
-def generate_signal(symbol):
+def fetch_signal(symbol):
     try:
-        klines = client.get_klines(symbol=symbol, interval="1m", limit=50)
-        closes = [float(k[4]) for k in klines]
-        volumes = [float(k[5]) for k in klines]
-        if len(closes) < 20:
+        url = f"https://api.twelvedata.com/time_series?symbol={symbol.replace('/', '')}&interval=1min&outputsize=50&apikey={API_KEY}"
+        response = requests.get(url)
+        data = response.json()
+        if "values" not in data:
             return None
-        rsi = calculate_rsi(closes)[-1]
-        avg_vol = sum(volumes[-10:]) / 10
-        curr_vol = volumes[-1]
-        if rsi < 30 and curr_vol > avg_vol:
+
+        closes = [float(c["close"]) for c in data["values"]]
+        volumes = [float(c["volume"]) for c in data["values"]]
+        if len(closes) < 15:
+            return None
+
+        gains, losses = [], []
+        for i in range(1, 15):
+            diff = closes[i - 1] - closes[i]
+            if diff > 0:
+                gains.append(diff)
+            else:
+                losses.append(abs(diff))
+        avg_gain = sum(gains) / 14
+        avg_loss = sum(losses) / 14
+        rs = avg_gain / avg_loss if avg_loss != 0 else 0
+        rsi = 100 - (100 / (1 + rs))
+
+        avg_vol = sum(volumes[:10]) / 10
+        current_vol = volumes[0]
+
+        if rsi < 30 and current_vol > avg_vol:
             action = "BUY"
-        elif rsi > 70 and curr_vol > avg_vol:
+        elif rsi > 70 and current_vol > avg_vol:
             action = "SELL"
         else:
             return None
-        strength = min(int(abs(rsi - 50) + (curr_vol / avg_vol) * 10), 100)
+
+        strength = min(int(abs(rsi - 50) + (current_vol / avg_vol) * 10), 100)
+        if strength < 80:
+            return None
+
         return {
-            "pair": symbol.replace("USDT", "/USDT"),
+            "pair": symbol,
             "action": action,
             "strength": strength,
             "timeframe": "1m",
             "buy_time": datetime.utcnow().strftime("%I:%M %p")
         }
-    except Exception as e:
-        print(f"Error on {symbol}:", e)
+    except:
         return None
 
 @app.get("/api/latest-signals")
 def get_signals():
     signals = []
-    for s in symbols:
-        sig = generate_signal(s)
-        if sig: signals.append(sig)
+    for symbol in symbols:
+        sig = fetch_signal(symbol)
+        if sig:
+            signals.append(sig)
+        if len(signals) >= 2:
+            break
     return {"signals": signals}
