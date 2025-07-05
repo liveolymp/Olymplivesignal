@@ -40,9 +40,9 @@ def analyze(pair):
     rsi = calculate_rsi(closes)
 
     action = None
-    if rsi < 35:
+    if rsi < 45:
         action = "Buy"
-    elif rsi > 65:
+    elif rsi > 55:
         action = "Sell"
 
     if not action:
@@ -51,7 +51,7 @@ def analyze(pair):
     avg_volume = np.mean(volumes[-15:])
     last_volume = volumes[0]
 
-    if last_volume < avg_volume * 1.05:
+    if last_volume < avg_volume * 0.95:
         return None
 
     strength = int(min(100, abs(rsi - 50) * 2))
