@@ -8,7 +8,7 @@ async function loadSignals() {
     container.innerHTML = "";
 
     if (!data.signals || data.signals.length === 0) {
-      container.innerHTML = "<div class='card'>No strong signals found.</div>";
+      container.innerHTML = "<div class='card'>No strong signals found right now.</div>";
       return;
     }
 
@@ -19,6 +19,8 @@ async function loadSignals() {
         <div><strong>Pair:</strong> ${signal.pair}</div>
         <div><strong>Action:</strong> ${signal.action}</div>
         <div><strong>Strength:</strong> <span class="strength">${signal.strength}%</span></div>
+        <div><strong>Trend:</strong> ${signal.trend}</div>
+        <div><strong>RSI:</strong> ${signal.rsi}</div>
         <div><strong>Buy Time:</strong> ${signal.buy_time}</div>
       `;
       container.appendChild(div);
@@ -29,4 +31,4 @@ async function loadSignals() {
 }
 
 loadSignals();
-setInterval(loadSignals, 30000); // Auto-refresh every 30s
+setInterval(loadSignals, 30000);
