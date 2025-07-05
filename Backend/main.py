@@ -1,5 +1,7 @@
 from flask import Flask, jsonify
 import requests
+import pandas as pd
+import numpy as np
 from datetime import datetime
 
 app = Flask(__name__)
@@ -7,56 +9,79 @@ app = Flask(__name__)
 API_KEY = "a24ff933811047d994b9e76f1e9d7280"
 PAIRS = ["EUR/USD", "GBP/USD", "USD/JPY", "AUD/USD", "USD/CHF", "NZD/USD"]
 
-def fetch_candle(pair):
+def fetch_candles(pair):
     symbol = pair.replace("/", "")
-    url = f"https://api.twelvedata.com/time_series?symbol={symbol}&interval=1min&outputsize=30&apikey={API_KEY}"
+    url = f"https://api.twelvedata.com/time_series?symbol={symbol}&interval=1min&outputsize=50&apikey={API_KEY}"
     try:
-        res = requests.get(url)
-        data = res.json()
+        response = requests.get(url)
+        data = response.json()
         return data.get("values", [])
     except:
         return []
 
-def analyze(candles):
-    if not candles or len(candles) < 10:
+def calculate_rsi(closes, period=14):
+    deltas = np.diff(closes)
+    seed = deltas[:period]
+    up = seed[seed >= 0].sum() / period
+    down = -seed[seed < 0].sum() / period
+    rs = up / down if down != 0 else 0
+    rsi = 100 - (100 / (1 + rs))
+    return round(rsi, 2)
+
+def analyze(pair):
+    candles = fetch_candles(pair)
+    if not candles or len(candles) < 20:
         return None
-    last = candles[0]
-    close_price = float(last['close'])
 
-    # Simulated RSI value (you can replace with real RSI logic later)
-    rsi = 30 + (hash(last['close']) % 40)
+    df = pd.DataFrame(candles)
+    df = df.astype({'close': 'float', 'volume': 'float'})
+    closes = df['close'].tolist()
+    volumes = df['volume'].tolist()
+    rsi = calculate_rsi(closes)
 
-    if rsi < 35:
+    action = None
+    if rsi < 30:
         action = "Buy"
-    elif rsi > 65:
+    elif rsi > 70:
         action = "Sell"
-    else:
+
+    if not action:
         return None
 
-    strength = int(abs(rsi - 50) * 2)
-    if strength < 70:
+    avg_volume = np.mean(volumes[-15:])
+    last_volume = volumes[0]
+
+    if last_volume < avg_volume * 1.2:  # Require volume spike
+        return None
+
+    strength = int(min(100, abs(rsi - 50) * 2))
+    if strength < 80:
         return None
 
     return {
         "pair": pair,
         "action": action,
         "strength": strength,
-        "trend": "Uptrend" if action == "Buy" else "Downtrend",
         "rsi": rsi,
+        "volume": last_volume,
+        "trend": "Uptrend" if action == "Buy" else "Downtrend",
         "buy_time": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
     }
 
 @app.route("/api/latest-signals")
 def latest_signals():
-    signals = []
+    results = []
     for pair in PAIRS:
-        data = fetch_candle(pair)
-        signal = analyze(data)
+        signal = analyze(pair)
         if signal:
-            signals.append(signal)
-        if len(signals) >= 2:
+            results.append(signal)
+        if len(results) >= 2:
             break
-    return jsonify({"signals": signals})
+    return jsonify({"signals": results})
+
+@app.route("/")
+def home():
+    return "✅ Olymp Signal Backend (Real Data) is running."
 
 if __name__ == "__main__":
     app.run()
