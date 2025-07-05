@@ -56,7 +56,7 @@ def fetch_signal(symbol):
             return None
 
         strength = min(int(abs(rsi - 50) + (current_vol / avg_vol) * 10), 100)
-        if strength < 80:
+        if strength < 50:
             return None
 
         return {
