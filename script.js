@@ -8,21 +8,23 @@ async function fetchSignals() {
     const now = new Date().toLocaleTimeString();
     document.getElementById("updated-time").innerText = "Last updated: " + now;
 
-    // Filter only signals with strength 80+
+    // Filter only signals with strength ≥ 65
     const strongSignals = data.signals
       .filter(signal => signal.strength >= 65)
-      .slice(0, 2);  // Only top 2
+      .slice(0, 2); // Show max 2
 
     container.innerHTML = "";
 
     if (strongSignals.length === 0) {
-      container.innerHTML = "<p>No strong signals right now (80%+)</p>";
+      container.innerHTML = "<p>No strong signals (≥65%) at the moment.</p>";
       return;
     }
 
     strongSignals.forEach((signal) => {
       const div = document.createElement("div");
-      let color = "green";
+      let color = "yellow";
+      if (signal.strength >= 80) color = "green";
+      else if (signal.strength <= 50) color = "red";
       div.className = "card " + color;
       div.innerHTML = `
         <h2>${signal.pair}</h2>
