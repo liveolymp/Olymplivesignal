@@ -1,8 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from binance.client import Client
-import os
-import statistics
+import requests, os, statistics
+from datetime import datetime, timedelta
 
 app = FastAPI()
 
@@ -14,63 +13,58 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Load keys from environment
-BINANCE_API_KEY = os.getenv("BINANCE_API_KEY")
-BINANCE_API_SECRET = os.getenv("BINANCE_API_SECRET")
-client = Client(BINANCE_API_KEY, BINANCE_API_SECRET)
+proxies = {
+    "http": "http://vfrutron:cqe8c72qjinn@38.154.227.167:5868",
+    "https": "http://vfrutron:cqe8c72qjinn@38.154.227.167:5868"
+}
 
-def calculate_rsi(prices, period=14):
-    gains = []
-    losses = []
-    for i in range(1, len(prices)):
-        diff = prices[i] - prices[i-1]
-        if diff >= 0:
-            gains.append(diff)
-            losses.append(0)
-        else:
-            losses.append(-diff)
-            gains.append(0)
-    if not gains or not losses:
-        return 50
+def get_klines(symbol="BTCUSDT", interval="1m", limit=50):
+    url = "https://api.binance.com/api/v3/klines"
+    params = {
+        "symbol": symbol,
+        "interval": interval,
+        "limit": limit
+    }
+    response = requests.get(url, params=params, proxies=proxies, timeout=10)
+    response.raise_for_status()
+    return response.json()
+
+def calculate_rsi(closes, period=14):
+    gains, losses = [], []
+    for i in range(1, len(closes)):
+        diff = closes[i] - closes[i-1]
+        gains.append(max(diff, 0))
+        losses.append(max(-diff, 0))
     avg_gain = sum(gains[-period:]) / period
     avg_loss = sum(losses[-period:]) / period
-    if avg_loss == 0:
-        return 100
+    if avg_loss == 0: return 100
     rs = avg_gain / avg_loss
-    return 100 - (100 / (1 + rs))
+    return round(100 - (100 / (1 + rs)), 2)
 
-def generate_signal(pair="BTCUSDT", interval="1m"):
-    candles = client.get_klines(symbol=pair, interval=interval, limit=50)
-    closes = [float(c[4]) for c in candles]
-    volumes = [float(c[5]) for c in candles]
-    times = [c[0] for c in candles]
-
+def generate_signal(symbol):
+    klines = get_klines(symbol=symbol)
+    closes = [float(k[4]) for k in klines]
+    volumes = [float(k[5]) for k in klines]
     rsi = calculate_rsi(closes)
     avg_vol = statistics.mean(volumes)
-    latest_vol = volumes[-1]
-    strength = min(100, max(0, int((latest_vol / avg_vol) * 100))) if avg_vol != 0 else 0
-
+    strength = min(100, int((volumes[-1] / avg_vol) * 100)) if avg_vol else 0
     action = "HOLD"
-    if rsi < 30:
-        action = "BUY"
-    elif rsi > 70:
-        action = "SELL"
-
-    now = datetime.utcnow() + timedelta(hours=5, minutes=30)
+    if rsi < 30: action = "BUY"
+    elif rsi > 70: action = "SELL"
+    ist_time = datetime.utcnow() + timedelta(hours=5, minutes=30)
     return {
-        "pair": pair.replace("USDT", "/USDT"),
+        "pair": symbol.replace("USDT", "/USDT"),
         "action": action,
-        "timeframe": interval,
-        "buy_time": now.strftime("%I:%M %p"),
+        "timeframe": "1m",
+        "buy_time": ist_time.strftime("%I:%M %p"),
         "strength": strength
     }
 
 @app.get("/")
 def root():
-    return {"message": "Olymp Signal backend live"}
+    return {"message": "Olymp Signal Backend via Proxy working"}
 
 @app.get("/api/latest-signals")
 def get_signals():
-    pairs = ["BTCUSDT", "ETHUSDT", "BNBUSDT"]
-    signals = [generate_signal(pair=p) for p in pairs]
-    return {"signals": signals}
+    symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT"]
+    return {"signals": [generate_signal(s) for s in symbols]}
