@@ -19,9 +19,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Read Binance credentials from Railway environment
-BINANCE_API_KEY = os.getenv("BINANCE_API_KEY")
-BINANCE_API_SECRET = os.getenv("BINANCE_API_SECRET")
+# Read from environment variables or fallback to hardcoded keys
+BINANCE_API_KEY = os.getenv("BINANCE_API_KEY", "D4H2HJPUg6R0gFXU3OFORuxRPO91jjhIrfqs8yrgLZQhAuZaLN8RbcsYEhBkWRUR")
+BINANCE_API_SECRET = os.getenv("BINANCE_API_SECRET", "tWHQ7SDISzePoAS2Y8naA0lWQG6W2PjewEWDGACUbAYF1liGNR5ksluDXG7IjDEj")
 client = Client(BINANCE_API_KEY, BINANCE_API_SECRET)
 
 class Signal(BaseModel):

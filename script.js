@@ -1,54 +1,30 @@
-// script.js
+const API_URL = "http://localhost:8000/api/latest-signals";  // Change to Railway URL after deployment
 
-const API_URL = "https://your-backend-domain.com/api/latest-signals"; // Change to your real backend URL
-
-const signalContainer = document.getElementById("signal-container");
-
-async function fetchSignals() {
-  signalContainer.innerHTML = "<p>Loading signals...</p>";
+async function loadSignals() {
+  const container = document.getElementById("signal-container");
+  container.innerHTML = "Loading...";
   try {
     const res = await fetch(API_URL);
-    if (!res.ok) throw new Error("Failed to fetch signals");
-
     const data = await res.json();
-    renderSignals(data.signals || []);
+    if (data.signals.length === 0) {
+      container.innerHTML = "<p>No signals right now.</p>";
+      return;
+    }
+    container.innerHTML = "";
+    data.signals.forEach(sig => {
+      const strengthClass = sig.strength >= 80 ? "strong" : sig.strength >= 50 ? "moderate" : "weak";
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `
+        <h2>${sig.pair} - <span class="${strengthClass}">${sig.action}</span></h2>
+        <p><strong>Timeframe:</strong> ${sig.timeframe}</p>
+        <p><strong>Buy Time (IST):</strong> ${sig.buy_time}</p>
+        <p><strong>Strength:</strong> <span class="${strengthClass}">${sig.strength}%</span></p>
+      `;
+      container.appendChild(card);
+    });
   } catch (err) {
-    signalContainer.innerHTML = `<p style="color: #f87171;">Error loading signals. Retrying in 10 seconds...</p>`;
-    setTimeout(fetchSignals, 10000);
+    container.innerHTML = "<p style='color:red;'>Error loading signals.</p>";
   }
 }
-
-function renderSignals(signals) {
-  if (signals.length === 0) {
-    signalContainer.innerHTML = "<p>No signals available right now.</p>";
-    return;
-  }
-
-  signalContainer.innerHTML = "";
-
-  signals.forEach((signal) => {
-    const card = document.createElement("div");
-    card.className = "signal-card";
-
-    const strengthClass =
-      signal.strength >= 81
-        ? "strength-high"
-        : signal.strength >= 51
-        ? "strength-medium"
-        : "strength-low";
-
-    card.innerHTML = `
-      <h3>${signal.pair} — ${signal.action}</h3>
-      <p><strong>Timeframe:</strong> ${signal.timeframe}</p>
-      <p><strong>Buy Time (IST):</strong> ${signal.buy_time}</p>
-      <p><strong>Strength:</strong> <span class="signal-strength ${strengthClass}">${signal.strength}%</span></p>
-    `;
-
-    signalContainer.appendChild(card);
-  });
-}
-
-// Auto-refresh every 60 seconds
-setInterval(fetchSignals, 60000);
-
-fetchSignals();
+loadSignals();

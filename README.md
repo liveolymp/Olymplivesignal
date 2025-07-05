@@ -1,21 +1,18 @@
-# Live Olymp Signal Engine
+# Olymp Signal Backend
 
-This is the backend engine that fetches real-time Forex data and applies:
-- RSI filter (14)
-- Volume spike
-- Breakout detection
-to deliver high-accuracy Buy/Sell signals (80%+ only).
+Live trading signal backend using Binance API and FastAPI.
 
-## How to Run
+## Setup
 
-```bash
-npm install
-node index.js
-```
+1. Install dependencies:
+   pip install -r requirements.txt
 
-API will be available at:
-```
-http://localhost:3000/api/latest-signals
-```
+2. Set environment variables:
+   export BINANCE_API_KEY=your_api_key
+   export BINANCE_API_SECRET=your_secret
 
-Auto-updates every 60 seconds.
+3. Run server:
+   uvicorn main:app --host 0.0.0.0 --port 8000
+
+## API
+- GET /api/latest-signals → Live trading signals (Buy/Sell + Strength)
