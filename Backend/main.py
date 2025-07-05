@@ -61,5 +61,9 @@ def root():
 
 @app.get("/api/latest-signals")
 def get_signals():
-    symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT"]
+    symbols = [
+  "EURUSDT", "GBPUSDT", "JPYUSDT", "AUDUSDT", "CADUSDT", "CHFUSDT", "NZDUSDT",
+  "BTCUSDT", "ETHUSDT", "LTCUSDT", "XRPUSDT", "BCHUSDT", "ETCUSDT", "EOSUSDT",
+  "DOTUSDT", "LINKUSDT", "TRXUSDT", "CRVUSDT", "XAUSDT", "XAGUSDT"
+]
     return {"signals": [generate_signal(s) for s in symbols]}
