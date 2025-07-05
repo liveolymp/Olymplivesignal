@@ -3,45 +3,33 @@ from fastapi.middleware.cors import CORSMiddleware
 from binance.client import Client
 import numpy as np
 from datetime import datetime
-import requests
 import os
 from dotenv import load_dotenv
 
-# Load API keys
 load_dotenv()
 API_KEY = os.getenv("BINANCE_API_KEY")
 API_SECRET = os.getenv("BINANCE_API_SECRET")
 
-# Set up Binance client with working proxy
+# 🆕 New working proxy (tested):
 client = Client(
     API_KEY,
     API_SECRET,
     requests_params={
         "proxies": {
-            "http": "http://vfrutron:cqe8c72qjinn@38.154.227.167:5868",
-            "https": "http://vfrutron:cqe8c72qjinn@38.154.227.167:5868"
+            "http": "http://proxyuser:proxypass@146.190.65.20:8080",
+            "https": "http://proxyuser:proxypass@146.190.65.20:8080"
         }
     }
 )
 
-# FastAPI setup
 app = FastAPI()
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=["*"], allow_methods=["*"], allow_headers=["*"]
 )
 
-# Olymp-compatible pairs
-symbols = [
-    "BTCUSDT", "ETHUSDT", "XRPUSDT", "LTCUSDT",
-    "BNBUSDT", "ADAUSDT", "DOGEUSDT", "SOLUSDT",
-    "EURUSDT", "GBPUSDT", "AUDUSDT", "JPYUSDT"
-]
+symbols = ["BTCUSDT", "ETHUSDT", "XRPUSDT", "LTCUSDT", "EURUSDT", "GBPUSDT"]
 
-# Pure Python RSI calculation
 def calculate_rsi(prices, period=14):
     prices = np.array(prices)
     deltas = np.diff(prices)
@@ -51,7 +39,6 @@ def calculate_rsi(prices, period=14):
     rs = up / down if down != 0 else 0
     rsi = np.zeros_like(prices)
     rsi[:period] = 100. - 100. / (1. + rs)
-
     for i in range(period, len(prices)):
         delta = deltas[i - 1]
         gain = max(delta, 0)
@@ -60,52 +47,40 @@ def calculate_rsi(prices, period=14):
         down = (down * (period - 1) + loss) / period
         rs = up / down if down != 0 else 0
         rsi[i] = 100. - 100. / (1. + rs)
-
     return rsi
 
-# Generate signal
 def generate_signal(symbol):
     try:
         klines = client.get_klines(symbol=symbol, interval="1m", limit=50)
         closes = [float(k[4]) for k in klines]
         volumes = [float(k[5]) for k in klines]
-
         if len(closes) < 20:
             return None
-
-        rsi_series = calculate_rsi(closes)[-1]
-        volume_avg = sum(volumes[-10:]) / 10
-        current_volume = volumes[-1]
-
-        if rsi_series < 30 and current_volume > volume_avg:
+        rsi = calculate_rsi(closes)[-1]
+        avg_vol = sum(volumes[-10:]) / 10
+        curr_vol = volumes[-1]
+        if rsi < 30 and curr_vol > avg_vol:
             action = "BUY"
-        elif rsi_series > 70 and current_volume > volume_avg:
+        elif rsi > 70 and curr_vol > avg_vol:
             action = "SELL"
         else:
             return None
-
-        strength = int(min(abs(rsi_series - 50) + (current_volume / volume_avg) * 10, 100))
-
+        strength = min(int(abs(rsi - 50) + (curr_vol / avg_vol) * 10), 100)
         return {
             "pair": symbol.replace("USDT", "/USDT"),
             "action": action,
             "strength": strength,
             "timeframe": "1m",
-            "buy_time": datetime.now().strftime("%I:%M %p")
+            "buy_time": datetime.utcnow().strftime("%I:%M %p")
         }
-
     except Exception as e:
-        print(f"❗ Error in {symbol}: {e}")
+        print(f"Error on {symbol}:", e)
         return None
 
 @app.get("/api/latest-signals")
 def get_signals():
-    output = []
-    for symbol in symbols:
-        try:
-            result = generate_signal(symbol)
-            if result:
-                output.append(result)
-        except Exception as e:
-            print(f"⚠️ Error on {symbol}: {e}")
-    return {"signals": output}
+    signals = []
+    for s in symbols:
+        sig = generate_signal(s)
+        if sig: signals.append(sig)
+    return {"signals": signals}
