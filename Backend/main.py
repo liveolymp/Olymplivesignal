@@ -7,7 +7,11 @@ from datetime import datetime
 app = Flask(__name__)
 
 API_KEY = "a24ff933811047d994b9e76f1e9d7280"
-PAIRS = ["EUR/USD", "GBP/USD", "USD/JPY", "AUD/USD", "USD/CHF", "NZD/USD"]
+PAIRS = [
+    "EUR/USD", "GBP/USD", "USD/JPY", "AUD/USD",
+    "USD/CHF", "NZD/USD", "EUR/GBP", "GBP/JPY",
+    "USD/CAD", "EUR/JPY"
+]
 
 def fetch_candles(pair):
     symbol = pair.replace("/", "")
@@ -55,7 +59,7 @@ def analyze(pair):
         return None
 
     strength = int(min(100, abs(rsi - 50) * 2))
-    if strength < 40:
+    if strength < 20:
         return None
 
     return {
