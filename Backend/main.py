@@ -1,91 +1,23 @@
-from flask import Flask, jsonify
-import requests
-import pandas as pd
-import numpy as np
-from datetime import datetime
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from generate_signals import generate_latest_signals, get_accuracy_stats
+import uvicorn
 
-app = Flask(__name__)
+app = FastAPI()
 
-API_KEY = "a24ff933811047d994b9e76f1e9d7280"
-PAIRS = [
-    "EUR/USD", "GBP/USD", "USD/JPY", "AUD/USD",
-    "USD/CHF", "NZD/USD", "EUR/GBP", "GBP/JPY",
-    "USD/CAD", "EUR/JPY"
-]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-def fetch_candles(pair):
-    symbol = pair.replace("/", "")
-    url = f"https://api.twelvedata.com/time_series?symbol={symbol}&interval=1min&outputsize=50&apikey={API_KEY}"
-    try:
-        response = requests.get(url)
-        data = response.json()
-        return data.get("values", [])
-    except:
-        return []
-
-def calculate_rsi(closes, period=14):
-    deltas = np.diff(closes)
-    seed = deltas[:period]
-    up = seed[seed >= 0].sum() / period
-    down = -seed[seed < 0].sum() / period
-    rs = up / down if down != 0 else 0
-    rsi = 100 - (100 / (1 + rs))
-    return round(rsi, 2)
-
-def analyze(pair):
-    candles = fetch_candles(pair)
-    if not candles or len(candles) < 20:
-        return None
-
-    df = pd.DataFrame(candles)
-    df = df.astype({'close': 'float', 'volume': 'float'})
-    closes = df['close'].tolist()
-    volumes = df['volume'].tolist()
-    rsi = calculate_rsi(closes)
-
-    action = None
-    if rsi < 45:
-        action = "Buy"
-    elif rsi > 55:
-        action = "Sell"
-
-    if not action:
-        return None
-
-    avg_volume = np.mean(volumes[-15:])
-    last_volume = volumes[0]
-
-    if last_volume < avg_volume * 0.95:
-        return None
-
-    strength = int(min(100, abs(rsi - 50) * 2))
-    if strength < 20:
-        return None
-
-    return {
-        "pair": pair,
-        "action": action,
-        "strength": strength,
-        "rsi": rsi,
-        "volume": last_volume,
-        "trend": "Uptrend" if action == "Buy" else "Downtrend",
-        "buy_time": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-    }
-
-@app.route("/api/latest-signals")
+@app.get("/api/latest-signals")
 def latest_signals():
-    results = []
-    for pair in PAIRS:
-        signal = analyze(pair)
-        if signal:
-            results.append(signal)
-        if len(results) >= 2:
-            break
-    return jsonify({"signals": results})
-
-@app.route("/")
-def home():
-    return "✅ Olymp Signal Backend (40%+ Strength Test Mode)"
+    signals = generate_latest_signals()
+    accuracy = get_accuracy_stats()
+    return {"signals": signals, "accuracy": accuracy}
 
 if __name__ == "__main__":
-    app.run()
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
