@@ -1,14 +1,14 @@
-# Olymp Signal Backend (TwelveData Version)
+# Olymp Signal Backend (Full Forex + Smart Filters)
 
-Live Forex/Crypto signal engine using RSI + Volume logic.
+✅ Real-time Forex signals  
+✅ Uses RSI + Volume + Trend filters  
+✅ Only sends strength ≥ 80%  
+✅ Tracks Win/Loss accuracy for all signals  
+✅ Built using FastAPI + TwelveData API  
 
-## Setup
+---
 
-1. Copy `.env.example` → `.env`
-2. Replace with your TwelveData API key
-
-## Run Locally
-
+## 🔧 How to Run Locally
 ```bash
 pip install -r requirements.txt
-uvicorn main:app --reload
+python main.py
