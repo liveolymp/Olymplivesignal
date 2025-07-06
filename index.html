@@ -6,41 +6,108 @@
   <title>Olymp Signal by Shubham</title>
   <style>
     body {
-      font-family: sans-serif;
-      background: #0d1117;
-      color: white;
+      font-family: Arial, sans-serif;
+      background-color: #0f172a;
+      color: #fff;
       margin: 0;
-      padding: 0;
+      padding: 20px;
     }
-    header {
-      padding: 1rem;
-      background: #161b22;
+    h1 {
       text-align: center;
-      font-size: 1.5rem;
-      font-weight: bold;
+      font-size: 26px;
+      margin-bottom: 10px;
     }
-    #signals {
+    .accuracy {
+      text-align: center;
+      font-size: 18px;
+      margin-bottom: 20px;
+      color: #38bdf8;
+    }
+    .grid {
       display: grid;
-      gap: 1rem;
-      padding: 1rem;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 16px;
     }
     .card {
-      background: #1f2937;
-      padding: 1rem;
-      border-radius: 1rem;
-      box-shadow: 0 0 10px #000;
+      background-color: #1e293b;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.4);
     }
-    .strength {
+    .pair {
       font-weight: bold;
-      color: #22c55e;
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+    .badge {
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    .green { background: #16a34a; color: white; }
+    .yellow { background: #facc15; color: black; }
+    .red { background: #dc2626; color: white; }
+    .refresh-btn {
+      display: block;
+      margin: 0 auto 20px;
+      padding: 10px 20px;
+      font-weight: bold;
+      font-size: 14px;
+      border: none;
+      border-radius: 6px;
+      background-color: #2563eb;
+      color: white;
+      cursor: pointer;
+    }
+    .refresh-btn:hover {
+      background-color: #1d4ed8;
     }
   </style>
 </head>
 <body>
-  <header>🔺 Olymp Signal by Shubham 🔺</header>
-  <section id="signals">
-    <div id="loading">Loading signal...</div>
-  </section>
-  <script src="script.js"></script>
+  <h1>Olymp Signal by Shubham</h1>
+  <div class="accuracy" id="accuracy">Loading accuracy...</div>
+  <button class="refresh-btn" onclick="loadSignals()">🔄 Refresh</button>
+  <div class="grid" id="signalGrid"></div>
+
+  <script>
+    const API_URL = "https://olymp-signal-backend.onrender.com/api/latest-signals";
+
+    function getStrengthClass(strength) {
+      if (strength >= 81) return "green";
+      if (strength >= 51) return "yellow";
+      return "red";
+    }
+
+    async function loadSignals() {
+      const grid = document.getElementById("signalGrid");
+      const accuracyEl = document.getElementById("accuracy");
+      grid.innerHTML = "<p>Loading signals...</p>";
+      try {
+        const res = await fetch(API_URL);
+        const data = await res.json();
+        grid.innerHTML = "";
+        data.signals.forEach(signal => {
+          const card = document.createElement("div");
+          card.className = "card";
+          card.innerHTML = `
+            <div class="pair">${signal.pair}</div>
+            <div>Action: <strong>${signal.action}</strong></div>
+            <div>Buy Time: ${signal.buy_time}</div>
+            <div>Result: ${signal.result}</div>
+            <div>Strength: <span class="badge ${getStrengthClass(signal.strength)}">${signal.strength}%</span></div>
+          `;
+          grid.appendChild(card);
+        });
+        accuracyEl.textContent = `✅ Accuracy: ${data.accuracy.accuracy} (${data.accuracy.wins} Wins / ${data.accuracy.losses} Losses)`;
+      } catch (err) {
+        grid.innerHTML = "<p style='color:red;'>⚠️ Error loading signals. Please try again later.</p>";
+      }
+    }
+
+    loadSignals();
+    setInterval(loadSignals, 30000); // Auto-refresh every 30 sec
+  </script>
 </body>
 </html>
