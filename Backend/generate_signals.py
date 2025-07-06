@@ -86,7 +86,7 @@ def generate_latest_signals():
         if volume_ok or trend_ok:
             action = "Buy" if float(latest["close"]) > float(latest["open"]) else "Sell"
             strength = calculate_strength(rsi, volume_ok, trend_ok)
-            if strength < 80:
+            if strength < 0:
                 continue
             result = check_result(latest["datetime"], action, symbol)
             signals.append({
