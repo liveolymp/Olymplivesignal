@@ -1,122 +1,81 @@
 import requests
-from datetime import datetime, timedelta
-import pytz
+from datetime import datetime
 import json
 
-API_KEY = "a24ff933811047d994b9e76f1e9d7280"
-BASE_URL = "https://api.twelvedata.com"
-IST = pytz.timezone("Asia/Kolkata")
-
+TWELVE_DATA_API_KEY = "a24ff933811047d994b9e76f1e9d7280"
 SYMBOLS = [
-    "AUD/CAD", "AUD/CHF", "AUD/JPY", "AUD/NZD", "AUD/USD",
-    "CAD/CHF", "CAD/JPY", "CHF/JPY", "EUR/AUD", "EUR/CAD",
-    "EUR/CHF", "EUR/GBP", "EUR/JPY", "EUR/NZD", "EUR/USD",
-    "GBP/AUD", "GBP/CAD", "GBP/CHF", "GBP/JPY", "GBP/NZD",
-    "GBP/USD", "NZD/CAD", "NZD/CHF", "NZD/JPY", "NZD/USD",
-    "USD/CAD", "USD/CHF", "USD/JPY", "USD/INR"
+    "EUR/USD", "GBP/USD", "USD/JPY", "USD/CHF", "AUD/USD", "NZD/USD",
+    "USD/CAD", "EUR/GBP", "EUR/JPY", "GBP/JPY", "XAU/USD", "BTC/USD"
 ]
 
-def get_ohlc(symbol, count=20):
-    url = f"{BASE_URL}/time_series"
-    params = {
-        "symbol": symbol,
-        "interval": "1min",
-        "outputsize": count,
-        "apikey": API_KEY,
-        "timezone": "Asia/Kolkata"
-    }
-    try:
-        response = requests.get(url, params=params)
-        return response.json().get("values", [])
-    except:
-        return []
+def fetch_data(symbol):
+    url = f"https://api.twelvedata.com/time_series?symbol={symbol}&interval=1min&apikey={TWELVE_DATA_API_KEY}&outputsize=2"
+    response = requests.get(url)
+    data = response.json()
+    if "values" in data:
+        return data["values"]
+    else:
+        print(f"⚠️ Failed to fetch: {symbol} -> {data}")
+        return None
 
-def calculate_rsi(candles, period=14):
-    gains, losses = [], []
-    for i in range(1, period + 1):
-        diff = float(candles[i-1]["close"]) - float(candles[i]["close"])
+def calculate_rsi(closes):
+    if len(closes) < 2:
+        return 50
+    gains = []
+    losses = []
+    for i in range(1, len(closes)):
+        diff = float(closes[i]) - float(closes[i - 1])
         if diff > 0:
             gains.append(diff)
         else:
             losses.append(abs(diff))
-    if not gains or not losses:
-        return 50
-    avg_gain = sum(gains) / period
-    avg_loss = sum(losses) / period
-    rs = avg_gain / avg_loss if avg_loss != 0 else 0
+    avg_gain = sum(gains) / len(gains) if gains else 0.001
+    avg_loss = sum(losses) / len(losses) if losses else 0.001
+    rs = avg_gain / avg_loss
     rsi = 100 - (100 / (1 + rs))
-    return round(rsi, 2)
-
-def detect_trend(candles):
-    directions = [float(candles[i-1]["close"]) > float(candles[i]["close"]) for i in range(1, 4)]
-    return all(directions) or not any(directions)
+    return rsi
 
 def calculate_strength(rsi, volume_ok, trend_ok):
     strength = 0
-    if volume_ok: strength += 30
-    if trend_ok: strength += 40
-    if 60 <= rsi <= 70 or 30 <= rsi <= 40: strength += 30
+    if 40 < rsi < 60:
+        strength += 30
+    if volume_ok:
+        strength += 35
+    if trend_ok:
+        strength += 35
     return strength
-
-def check_result(signal_time, action, symbol):
-    time_dt = datetime.strptime(signal_time, "%Y-%m-%d %H:%M:%S") + timedelta(minutes=1)
-    candles = get_ohlc(symbol, count=2)
-    for candle in candles:
-        if candle["datetime"].startswith(time_dt.strftime("%Y-%m-%d %H:%M")):
-            open_price = float(candle["open"])
-            close_price = float(candle["close"])
-            if action == "Buy" and close_price > open_price:
-                return "✅ Win"
-            elif action == "Sell" and close_price < open_price:
-                return "✅ Win"
-            else:
-                return "❌ Loss"
-    return "❌ No Data"
 
 def generate_latest_signals():
     signals = []
     for symbol in SYMBOLS:
-        candles = get_ohlc(symbol, count=20)
-        if len(candles) < 15:
+        data = fetch_data(symbol)
+        if not data or len(data) < 2:
             continue
-        latest, prev = candles[0], candles[1]
-        volume_ok = float(latest.get("volume", 0)) > float(prev.get("volume", 0))  # FIXED LINE
-        rsi = calculate_rsi(candles[:15])
-        trend_ok = detect_trend(candles[:4])
-        if volume_ok or trend_ok:
-            action = "Buy" if float(latest["close"]) > float(latest["open"]) else "Sell"
-            strength = calculate_strength(rsi, volume_ok, trend_ok)
-            if strength < 0:
-                continue
-            result = check_result(latest["datetime"], action, symbol)
-            signals.append({
-                "pair": symbol,
-                "action": action,
-                "strength": strength,
-                "buy_time": latest["datetime"],
-                "result": result
-            })
-    save_history(signals)
-    return signals
 
-def save_history(new_signals):
-    try:
-        with open("signal_history.json", "r") as f:
-            history = json.load(f)
-    except:
-        history = []
-    history.extend(new_signals)
-    history = history[-100:]
+        latest, prev = data[0], data[1]
+        close_prices = [entry["close"] for entry in data]
+        rsi = calculate_rsi(close_prices)
+
+        volume_ok = float(latest["volume"]) > float(prev["volume"])
+        trend_ok = float(latest["close"]) > float(latest["open"])
+        strength = calculate_strength(rsi, volume_ok, trend_ok)
+
+        # 🔍 Debug logs
+        print(f"🟡 {symbol}: RSI={rsi:.2f}, VolOK={volume_ok}, TrendOK={trend_ok}, Strength={strength}")
+
+        # 🧪 Filter is now off — allow all
+        signal = {
+            "pair": symbol,
+            "action": "Buy" if trend_ok else "Sell",
+            "rsi": round(rsi, 2),
+            "strength": strength,
+            "buy_time": datetime.utcnow().strftime("%H:%M UTC"),
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        signals.append(signal)
+
+    # Save to history
     with open("signal_history.json", "w") as f:
-        json.dump(history, f, indent=2)
+        json.dump(signals, f)
 
-def get_accuracy_stats():
-    try:
-        with open("signal_history.json", "r") as f:
-            history = json.load(f)
-    except:
-        return {"accuracy": "N/A", "wins": 0, "losses": 0}
-    wins = sum(1 for s in history if s.get("result") == "✅ Win")
-    total = len(history)
-    accuracy = f"{int((wins / total) * 100)}%" if total > 0 else "0%"
-    return {"accuracy": accuracy, "wins": wins, "losses": total - wins}
+    return signals
