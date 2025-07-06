@@ -7,7 +7,6 @@ API_KEY = "a24ff933811047d994b9e76f1e9d7280"
 BASE_URL = "https://api.twelvedata.com"
 IST = pytz.timezone("Asia/Kolkata")
 
-# All major forex pairs from TwelveData
 SYMBOLS = [
     "AUD/CAD", "AUD/CHF", "AUD/JPY", "AUD/NZD", "AUD/USD",
     "CAD/CHF", "CAD/JPY", "CHF/JPY", "EUR/AUD", "EUR/CAD",
@@ -81,7 +80,7 @@ def generate_latest_signals():
         if len(candles) < 15:
             continue
         latest, prev = candles[0], candles[1]
-        volume_ok = float(latest["volume"]) > float(prev["volume"])
+        volume_ok = float(latest.get("volume", 0)) > float(prev.get("volume", 0))  # FIXED LINE
         rsi = calculate_rsi(candles[:15])
         trend_ok = detect_trend(candles[:4])
         if volume_ok or trend_ok:
