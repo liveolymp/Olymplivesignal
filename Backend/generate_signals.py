@@ -1,81 +1,63 @@
 import requests
-from datetime import datetime
-import json
+import datetime
 
-TWELVE_DATA_API_KEY = "a24ff933811047d994b9e76f1e9d7280"
-SYMBOLS = [
-    "EUR/USD", "GBP/USD", "USD/JPY", "USD/CHF", "AUD/USD", "NZD/USD",
-    "USD/CAD", "EUR/GBP", "EUR/JPY", "GBP/JPY", "XAU/USD", "BTC/USD"
+API_KEY = "a24ff933811047d994b9e76f1e9d7280"
+BASE_URL = "https://api.twelvedata.com"
+PAIRS = [
+    "EUR/USD", "USD/JPY", "GBP/USD", "USD/CHF", "USD/CAD",
+    "AUD/USD", "NZD/USD", "BTC/USD", "ETH/USD", "XAU/USD"
 ]
 
-def fetch_data(symbol):
-    url = f"https://api.twelvedata.com/time_series?symbol={symbol}&interval=1min&apikey={TWELVE_DATA_API_KEY}&outputsize=2"
-    response = requests.get(url)
-    data = response.json()
-    if "values" in data:
-        return data["values"]
-    else:
-        print(f"⚠️ Failed to fetch: {symbol} -> {data}")
-        return None
+def fetch_macd_ema(symbol):
+    params = {
+        "symbol": symbol,
+        "interval": "1min",
+        "apikey": API_KEY,
+        "outputsize": 2,
+    }
 
-def calculate_rsi(closes):
-    if len(closes) < 2:
-        return 50
-    gains = []
-    losses = []
-    for i in range(1, len(closes)):
-        diff = float(closes[i]) - float(closes[i - 1])
-        if diff > 0:
-            gains.append(diff)
-        else:
-            losses.append(abs(diff))
-    avg_gain = sum(gains) / len(gains) if gains else 0.001
-    avg_loss = sum(losses) / len(losses) if losses else 0.001
-    rs = avg_gain / avg_loss
-    rsi = 100 - (100 / (1 + rs))
-    return rsi
+    macd_url = f"{BASE_URL}/macd"
+    ema_url = f"{BASE_URL}/ema"
 
-def calculate_strength(rsi, volume_ok, trend_ok):
-    strength = 0
-    if 40 < rsi < 60:
-        strength += 30
-    if volume_ok:
-        strength += 35
-    if trend_ok:
-        strength += 35
-    return strength
+    macd_params = params.copy()
+    macd_params.update({"series_type": "close", "fast_period": 12, "slow_period": 26, "signal_period": 9})
+
+    ema_params = params.copy()
+    ema_params.update({"series_type": "close", "time_period": 21})
+
+    macd_data = requests.get(macd_url, params=macd_params).json()
+    ema_data = requests.get(ema_url, params=ema_params).json()
+
+    return macd_data, ema_data
 
 def generate_latest_signals():
     signals = []
-    for symbol in SYMBOLS:
-        data = fetch_data(symbol)
-        if not data or len(data) < 2:
+    for pair in PAIRS:
+        macd_data, ema_data = fetch_macd_ema(pair)
+
+        try:
+            macd = float(macd_data["values"][0]["macd"])
+            signal_line = float(macd_data["values"][0]["signal"])
+            ema = float(ema_data["values"][0]["ema"])
+            close_price = float(macd_data["values"][0]["close"])
+
+            if macd > signal_line and close_price > ema:
+                action = "Buy"
+            elif macd < signal_line and close_price < ema:
+                action = "Sell"
+            else:
+                continue
+
+            strength = min(100, abs(macd - signal_line) * 100)
+            signals.append({
+                "pair": pair,
+                "action": action,
+                "strength": round(strength),
+                "price": close_price,
+                "time": datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+            })
+        except Exception as e:
+            print(f"⚠️ Failed to process {pair}: {e}")
             continue
-
-        latest, prev = data[0], data[1]
-        close_prices = [entry["close"] for entry in data]
-        rsi = calculate_rsi(close_prices)
-
-        volume_ok = float(latest["volume"]) > float(prev["volume"])
-        trend_ok = float(latest["close"]) > float(latest["open"])
-        strength = calculate_strength(rsi, volume_ok, trend_ok)
-
-        # 🔍 Debug logs
-        print(f"🟡 {symbol}: RSI={rsi:.2f}, VolOK={volume_ok}, TrendOK={trend_ok}, Strength={strength}")
-
-        # 🧪 Filter is now off — allow all
-        signal = {
-            "pair": symbol,
-            "action": "Buy" if trend_ok else "Sell",
-            "rsi": round(rsi, 2),
-            "strength": strength,
-            "buy_time": datetime.utcnow().strftime("%H:%M UTC"),
-            "timestamp": datetime.utcnow().isoformat()
-        }
-        signals.append(signal)
-
-    # Save to history
-    with open("signal_history.json", "w") as f:
-        json.dump(signals, f)
 
     return signals
