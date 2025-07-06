@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from generate_signals import generate_latest_signals, get_accuracy_stats
+from generate_signals import generate_latest_signals
 import uvicorn
 
 app = FastAPI()
